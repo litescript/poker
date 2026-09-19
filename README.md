@@ -35,13 +35,15 @@ Serving it at `litescript.net/poker` needs no DNS record:
 
 ```caddy
 litescript.net {
-	# Caddy runs `redir` before `handle` regardless of source order, so an
-	# unconditional apex -> www redirect would swallow /poker. Exempt it.
-	@notpoker not path /poker /poker/*
-	redir @notpoker https://www.litescript.net{uri} 308
-
 	handle_path /poker* {
 		reverse_proxy 127.0.0.1:8082
+	}
+
+	# Caddy runs `redir` before `handle` regardless of source order, so an
+	# unconditional apex -> www redirect would swallow /poker. Putting the
+	# redirect in a catch-all `handle` gives first-match-wins ordering.
+	handle {
+		redir https://www.litescript.net{uri} 308
 	}
 }
 ```

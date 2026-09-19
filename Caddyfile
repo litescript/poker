@@ -1,12 +1,14 @@
 # Pokerpot at litescript.net/poker — no new DNS record needed.
 #
-# This is a snippet for an existing Caddyfile, not a standalone config.
+# A snippet for an existing Caddyfile, not a standalone config.
 #
-# Two things matter:
+# Two traps, both hit in the wild:
 #
-# 1. Caddy runs `redir` BEFORE `handle`, whatever order they appear in. An
-#    unconditional apex -> www redirect therefore swallows /poker before
-#    handle_path sees it. Exempt /poker from the redirect with a matcher.
+# 1. Caddy runs `redir` BEFORE `handle`, whatever order they appear in, so an
+#    unconditional apex -> www redirect swallows /poker before handle_path
+#    sees it. Put the redirect in a catch-all `handle` block instead: handle
+#    blocks are mutually exclusive and evaluated in written order, so the
+#    first match wins and no negated matcher is needed.
 #
 # 2. Serve it from a block with no restrictive Content-Security-Policy. The
 #    app is a single inline <script> and pulls fonts from Google, so a
@@ -15,12 +17,13 @@
 litescript.net {
 	# ... your existing HSTS / imports ...
 
-	# Everything except /poker goes to the canonical www host.
-	@notpoker not path /poker /poker/*
-	redir @notpoker https://www.litescript.net{uri} 308
-
 	handle_path /poker* {
 		reverse_proxy 127.0.0.1:8082
+	}
+
+	# Everything else goes to the canonical host.
+	handle {
+		redir https://www.litescript.net{uri} 308
 	}
 }
 
