@@ -10,7 +10,7 @@ After=network.target
 Type=simple
 User=peter
 WorkingDirectory=/home/peter/code/pokerpot
-Environment=PORT=8080
+Environment=PORT=8082
 Environment=POKERPOT_BASE=/poker
 Environment=HOST=127.0.0.1
 Environment=POKERPOT_PIN=changeme

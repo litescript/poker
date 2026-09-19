@@ -13,7 +13,7 @@ everyone's phone, all looking at the same table.
 ## Run it
 
 ```sh
-PORT=8080 POKERPOT_PIN=4242 node server.mjs
+PORT=8082 POKERPOT_PIN=4242 node server.mjs
 ```
 
 No dependencies. Everyone on the wifi opens the URL and types the PIN once.
@@ -37,7 +37,7 @@ existing site block:
 ```caddy
 litescript.net {
 	handle_path /poker* {
-		reverse_proxy 127.0.0.1:8080
+		reverse_proxy 127.0.0.1:8082
 	}
 
 	# ... your existing handlers ...
@@ -47,7 +47,7 @@ litescript.net {
 and run the app with a matching `POKERPOT_BASE`:
 
 ```sh
-PORT=8080 HOST=127.0.0.1 POKERPOT_BASE=/poker POKERPOT_PIN=4242 node server.mjs
+PORT=8082 HOST=127.0.0.1 POKERPOT_BASE=/poker POKERPOT_PIN=4242 node server.mjs
 ```
 
 `handle_path` strips the prefix before proxying. `POKERPOT_BASE` is what the
@@ -66,7 +66,7 @@ nginx buffers SSE by default and the table will look frozen until a flush:
 
 ```nginx
 location /poker/ {
-    proxy_pass         http://127.0.0.1:8080/;
+    proxy_pass         http://127.0.0.1:8082/;
     proxy_http_version 1.1;
     proxy_set_header   Connection "";
     proxy_buffering    off;
