@@ -75,8 +75,16 @@ location /poker/ {
 ```
 </details>
 
-As a service: edit `pokerpot.service` (user, path, PIN), then
-`sudo cp pokerpot.service /etc/systemd/system/ && sudo systemctl enable --now pokerpot`.
+As a service, from a clone at `/srv/poker`:
+
+```sh
+sudo cp pokerpot.service /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
+```
+
+The unit runs as root out of `/srv/poker`, with the filesystem read-only apart
+from `/srv/poker` itself. Change `POKERPOT_PIN`, or drop the line to skip the
+prompt.
 
 ## Layout
 
