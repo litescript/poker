@@ -82,9 +82,20 @@ sudo cp pokerpot.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
 ```
 
-The unit runs as root out of `/srv/poker`, with the filesystem read-only apart
-from `/srv/poker` itself. Change `POKERPOT_PIN`, or drop the line to skip the
-prompt.
+The unit runs as root out of `/srv/poker`. Change `POKERPOT_PIN`, or drop the
+line to skip the prompt.
+
+It deliberately uses no sandboxing directives: `ProtectSystem=strict` and
+`ReadWritePaths=` need systemd 231+ and fail with `217/USER` on older releases
+like RHEL/CentOS 7. On systemd 231 or newer you can add:
+
+```ini
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/poker
+```
 
 ## Layout
 
