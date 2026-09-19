@@ -31,18 +31,27 @@ mid-session loses nothing.
 
 ## Behind Caddy, at a subpath
 
-Serving it at `litescript.net/poker` needs no DNS record. Add this inside your
-existing site block:
+Serving it at `litescript.net/poker` needs no DNS record:
 
 ```caddy
 litescript.net {
+	# Caddy runs `redir` before `handle` regardless of source order, so an
+	# unconditional apex -> www redirect would swallow /poker. Exempt it.
+	@notpoker not path /poker /poker/*
+	redir @notpoker https://www.litescript.net{uri} 308
+
 	handle_path /poker* {
 		reverse_proxy 127.0.0.1:8082
 	}
-
-	# ... your existing handlers ...
 }
 ```
+
+Serve it from a site block with no restrictive `Content-Security-Policy`. The
+page is one inline `<script>` and loads fonts from Google, so a policy of
+`script-src 'self'` leaves a blank page. If it has to live behind a strict CSP,
+that block needs `script-src 'self' 'unsafe-inline'`, plus
+`style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` and
+`font-src 'self' https://fonts.gstatic.com`.
 
 and run the app with a matching `POKERPOT_BASE`:
 

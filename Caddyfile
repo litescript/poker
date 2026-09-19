@@ -1,17 +1,33 @@
 # Pokerpot at litescript.net/poker — no new DNS record needed.
 #
-# Add this handle block inside your existing litescript.net site block, above
-# whatever serves the rest of the site. `handle_path` strips the /poker prefix
-# before proxying; the app is told where it's mounted via POKERPOT_BASE, so it
-# builds its own URLs correctly either way.
+# This is a snippet for an existing Caddyfile, not a standalone config.
 #
-# No streaming config needed: reverse_proxy detects text/event-stream and
-# flushes each event immediately, so the live table stays live.
+# Two things matter:
+#
+# 1. Caddy runs `redir` BEFORE `handle`, whatever order they appear in. An
+#    unconditional apex -> www redirect therefore swallows /poker before
+#    handle_path sees it. Exempt /poker from the redirect with a matcher.
+#
+# 2. Serve it from a block with no restrictive Content-Security-Policy. The
+#    app is a single inline <script> and pulls fonts from Google, so a
+#    `script-src 'self'` policy renders it a blank page.
 
 litescript.net {
+	# ... your existing HSTS / imports ...
+
+	# Everything except /poker goes to the canonical www host.
+	@notpoker not path /poker /poker/*
+	redir @notpoker https://www.litescript.net{uri} 308
+
 	handle_path /poker* {
 		reverse_proxy 127.0.0.1:8082
 	}
+}
 
-	# ... your existing site handlers ...
+# Optional: so www.litescript.net/poker works too, rather than 404ing.
+www.litescript.net {
+	@poker path /poker /poker/*
+	redir @poker https://litescript.net{uri} 308
+
+	# ... the rest of your site ...
 }
