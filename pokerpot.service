@@ -8,7 +8,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+# No User= — systemd runs units as root by default. Setting it explicitly is
+# redundant, and on some systems resolving it fails the unit with 217/USER.
 WorkingDirectory=/srv/poker
 Environment=PORT=8082
 Environment=HOST=127.0.0.1

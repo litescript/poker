@@ -82,8 +82,9 @@ sudo cp pokerpot.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
 ```
 
-The unit runs as root out of `/srv/poker`. Change `POKERPOT_PIN`, or drop the
-line to skip the prompt.
+The unit runs as root out of `/srv/poker` — it sets no `User=`, since that's
+the default and naming it explicitly can fail the unit with `217/USER` on some
+systems. Change `POKERPOT_PIN`, or drop the line to skip the prompt.
 
 It deliberately uses no sandboxing directives: `ProtectSystem=strict` and
 `ReadWritePaths=` need systemd 231+ and fail with `217/USER` on older releases
