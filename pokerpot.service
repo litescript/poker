@@ -1,23 +1,33 @@
-# Install:
-#   cp pokerpot.service /etc/systemd/system/
-#   systemctl daemon-reload && systemctl enable --now pokerpot
+# Install (note cp -f — an existing unit will not be replaced otherwise):
+#   cp -f pokerpot.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl restart pokerpot
 #   systemctl status pokerpot
+#
+# If it fails with 217/USER, the installed unit names a user that doesn't
+# exist on this box — check `cat /etc/systemd/system/pokerpot.service`, not
+# the copy in the repo.
 [Unit]
 Description=Pokerpot
 After=network.target
 
 [Service]
 Type=simple
-# No User= — systemd runs units as root by default. Setting it explicitly is
-# redundant, and on some systems resolving it fails the unit with 217/USER.
+# No User= — systemd runs units as root by default.
 WorkingDirectory=/srv/poker
 Environment=PORT=8082
 Environment=HOST=127.0.0.1
 Environment=POKERPOT_BASE=/poker
 Environment=POKERPOT_PIN=changeme
-ExecStart=/usr/bin/env node server.mjs
+ExecStart=/usr/bin/node server.mjs
 Restart=always
 RestartSec=3
+
+# The app only ever writes /srv/poker/data. Needs systemd 231+ (this box: 239).
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/poker
 
 [Install]
 WantedBy=multi-user.target

@@ -82,21 +82,16 @@ sudo cp pokerpot.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
 ```
 
-The unit runs as root out of `/srv/poker` — it sets no `User=`, since that's
-the default and naming it explicitly can fail the unit with `217/USER` on some
-systems. Change `POKERPOT_PIN`, or drop the line to skip the prompt.
+The unit runs as root out of `/srv/poker` and sets no `User=`, since root is
+the default. Change `POKERPOT_PIN`, or drop the line to skip the prompt.
 
-It deliberately uses no sandboxing directives: `ProtectSystem=strict` and
-`ReadWritePaths=` need systemd 231+ and fail with `217/USER` on older releases
-like RHEL/CentOS 7. On systemd 231 or newer you can add:
+Use `cp -f` — without it, an existing unit is left in place and systemd keeps
+running the old one. A unit that fails with `217/USER` is naming a user that
+doesn't exist on the box; check the file in `/etc/systemd/system/`, not the one
+in the repo.
 
-```ini
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ProtectHome=yes
-ReadWritePaths=/srv/poker
-```
+`ExecStart` uses the absolute `/usr/bin/node` rather than `/usr/bin/env node`,
+because units run with a minimal `PATH` that won't find an nvm-installed Node.
 
 ## Layout
 
