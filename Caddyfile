@@ -1,0 +1,17 @@
+# Pokerpot at litescript.net/poker — no new DNS record needed.
+#
+# Add this handle block inside your existing litescript.net site block, above
+# whatever serves the rest of the site. `handle_path` strips the /poker prefix
+# before proxying; the app is told where it's mounted via POKERPOT_BASE, so it
+# builds its own URLs correctly either way.
+#
+# No streaming config needed: reverse_proxy detects text/event-stream and
+# flushes each event immediately, so the live table stays live.
+
+litescript.net {
+	handle_path /poker* {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	# ... your existing site handlers ...
+}

@@ -1,0 +1,22 @@
+# Install:
+#   sudo cp pokerpot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
+# Edit User, WorkingDirectory and the PIN first.
+[Unit]
+Description=Pokerpot
+After=network.target
+
+[Service]
+Type=simple
+User=peter
+WorkingDirectory=/home/peter/code/pokerpot
+Environment=PORT=8080
+Environment=POKERPOT_BASE=/poker
+Environment=HOST=127.0.0.1
+Environment=POKERPOT_PIN=changeme
+ExecStart=/usr/bin/env node server.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

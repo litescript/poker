@@ -1,0 +1,1343 @@
+<title>Pokerpot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EFF1EC; --surface:#FAFBF7; --surface-2:#E4E8DE; --sunk:#E9ECE4;
+  --ink:#141A15; --ink-2:#55605A; --ink-3:#8A948C;
+  --line:#D3D8CC; --line-2:#C2C9BA;
+  --brass:#8C6519; --brass-ink:#5E430F; --brass-soft:#F0E6CB; --on-brass:#FFFDF6;
+  --felt:#1D6A4A; --felt-soft:#DCEBE1;
+  --clay:#A9382C; --clay-soft:#F4DEDA;
+  --shadow:0 1px 2px rgba(20,26,21,.07), 0 6px 18px rgba(20,26,21,.05);
+  --display:"Familjen Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0E120F; --surface:#161D18; --surface-2:#212A23; --sunk:#111714;
+  --ink:#E9EEE7; --ink-2:#98A79C; --ink-3:#6C7A70;
+  --line:#293229; --line-2:#364238;
+  --brass:#D7A94E; --brass-ink:#EBCB8B; --brass-soft:#372C13; --on-brass:#1A1405;
+  --felt:#53BE8C; --felt-soft:#132A1F;
+  --clay:#E47963; --clay-soft:#2E1714;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+}}
+:root[data-theme="dark"]{
+  --bg:#0E120F; --surface:#161D18; --surface-2:#212A23; --sunk:#111714;
+  --ink:#E9EEE7; --ink-2:#98A79C; --ink-3:#6C7A70;
+  --line:#293229; --line-2:#364238;
+  --brass:#D7A94E; --brass-ink:#EBCB8B; --brass-soft:#372C13; --on-brass:#1A1405;
+  --felt:#53BE8C; --felt-soft:#132A1F;
+  --clay:#E47963; --clay-soft:#2E1714;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button{font:inherit;color:inherit}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.eyebrow{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--bg);
+  border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px 0}
+.brandrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.brand .dot{color:var(--brass)}
+.tablename{font-size:13px;color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-3)}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);display:block}
+.sync.live i{background:var(--felt)}
+.sync.local i{background:var(--brass)}
+
+.tabs{display:flex;gap:2px;margin-top:10px}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  padding:8px 13px;font-size:13.5px;font-weight:600;color:var(--ink-3);cursor:pointer;
+  font-family:var(--display);letter-spacing:.01em}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--brass)}
+.tab:focus-visible{outline:2px solid var(--brass);outline-offset:-2px;border-radius:4px}
+
+/* ---------- pot headline ---------- */
+.potbar{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;
+  padding:18px 0 16px;border-bottom:1px solid var(--line)}
+.potfig{display:flex;align-items:baseline;gap:8px}
+.potfig .v{font-family:var(--mono);font-weight:600;font-size:clamp(36px,11vw,54px);line-height:.92;letter-spacing:-.03em}
+.potfig .u{font-size:13px;color:var(--ink-2);font-weight:500}
+.handmeta{text-align:right;font-size:12px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.sidepots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sidepot{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--surface-2);
+  border:1px solid var(--line);color:var(--ink-2)}
+.sidepot b{font-family:var(--mono);color:var(--ink);font-weight:600}
+
+/* ---------- panels ---------- */
+.cols{display:grid;gap:22px;margin-top:20px}
+@media(min-width:900px){ .cols.two{grid-template-columns:1fr 340px;align-items:start} }
+.panel{display:flex;flex-direction:column;gap:12px}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* ---------- seat rows ---------- */
+.seats{display:flex;flex-direction:column;gap:7px}
+.seat{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  padding:11px 13px;position:relative;overflow:hidden}
+.seat.turn{border-color:var(--brass);box-shadow:var(--shadow)}
+.seat.turn::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--brass)}
+.seat.folded{opacity:.5}
+.seat.away{opacity:.62;border-style:dashed}
+.seat .who{min-width:0}
+.seat .nm{font-family:var(--display);font-weight:600;font-size:15.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .sub{font-size:11.5px;color:var(--ink-2);display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:1px}
+.seat .stack{text-align:right;display:flex;flex-direction:column;gap:1px;align-items:flex-end}
+.seat .stack .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:16px}
+.seat .stack .c{font-family:var(--mono);font-size:11.5px;color:var(--brass-ink);font-weight:500}
+
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--display);font-weight:700;font-size:13px;color:#fff;flex:none;letter-spacing:.01em}
+
+.tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:2px 6px;border-radius:5px;background:var(--surface-2);color:var(--ink-2);font-family:var(--body)}
+.tag.btn-d{background:var(--ink);color:var(--surface)}
+.tag.blind{background:var(--brass-soft);color:var(--brass-ink)}
+.tag.allin{background:var(--clay-soft);color:var(--clay)}
+.tag.fold{background:var(--surface-2);color:var(--ink-3)}
+
+/* ---------- buttons ---------- */
+.btn{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  border-radius:9px;padding:9px 14px;font-weight:600;font-size:14px;cursor:pointer;
+  font-family:var(--body);display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .06s ease, background .12s ease}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:7px}
+.btn.xs{padding:3px 8px;font-size:11.5px;border-radius:6px;font-weight:600}
+.btn.primary{background:var(--felt);border-color:var(--felt);color:#fff}
+.btn.danger{background:var(--clay-soft);border-color:transparent;color:var(--clay)}
+.btn.brass{background:var(--brass);border-color:var(--brass);color:var(--on-brass)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+.btnrow{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ---------- action dock ---------- */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
+  border-top:1px solid var(--line);box-shadow:0 -6px 22px rgba(0,0,0,.10);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.dock .inner{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:9px}
+.dock .onthe{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--ink-2)}
+.dock .onthe b{font-family:var(--display);font-size:15px;color:var(--ink);font-weight:700}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.acts .btn{padding:13px 8px;font-size:15px}
+.raiserow{display:grid;grid-template-columns:auto 1fr auto;gap:7px;align-items:center}
+.stepper{appearance:none;width:100%;border:1px solid var(--line-2);background:var(--sunk);
+  color:var(--ink);border-radius:9px;padding:11px 10px;font-family:var(--mono);
+  font-weight:600;font-size:17px;text-align:center;font-variant-numeric:tabular-nums}
+.stepper:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ---------- forms ---------- */
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.input{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  border-radius:9px;padding:10px 12px;font-family:var(--body);font-size:14.5px;width:100%}
+.input.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.input:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.note{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  background:var(--brass-soft);color:var(--brass-ink);border-radius:10px;padding:10px 13px;font-size:12.5px}
+.empty{border:1px dashed var(--line-2);border-radius:12px;padding:26px 18px;text-align:center;color:var(--ink-2);font-size:13.5px}
+
+/* ---------- ledger ---------- */
+.ledger{display:flex;flex-direction:column;gap:7px}
+.lrow{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px 13px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.lrow.out{opacity:.6}
+.lctl{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.buyins{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line-2);border-radius:7px;overflow:hidden}
+.buyins button{appearance:none;border:0;background:var(--surface-2);width:28px;height:26px;cursor:pointer;
+  font-size:15px;line-height:1;display:grid;place-items:center;color:var(--ink-2)}
+.buyins button:hover{color:var(--ink)}
+.buyins .n{font-family:var(--mono);font-size:12.5px;font-weight:600;padding:0 9px;min-width:34px;text-align:center}
+
+/* ---------- settle ---------- */
+.settle{display:flex;flex-direction:column;gap:7px}
+.pay{display:grid;grid-template-columns:1fr auto 1fr auto;gap:10px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+.pay .arrow{color:var(--ink-3);font-size:15px}
+.pay .amt{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
+.pay .p{font-family:var(--display);font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay .p.r{text-align:right}
+.netrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line)}
+.netrow:last-child{border-bottom:0}
+.net-pos{color:var(--felt)} .net-neg{color:var(--clay)}
+
+/* ---------- log ---------- */
+.log{display:flex;flex-direction:column;gap:0;font-size:12.5px;max-height:230px;overflow-y:auto;
+  border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+.log div{padding:7px 12px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.log div:last-child{border-bottom:0}
+.log b{color:var(--ink);font-weight:600}
+.log .amt{font-family:var(--mono);font-weight:600;color:var(--ink)}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(10,14,11,.5);display:grid;place-items:end center;padding:0}
+@media(min-width:640px){.scrim{place-items:center}}
+.modal{background:var(--bg);border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:520px;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;
+  max-height:88vh;overflow-y:auto}
+@media(min-width:640px){.modal{border-radius:16px;padding-bottom:18px}}
+.pick{display:flex;flex-direction:column;gap:7px}
+.pickitem{display:flex;align-items:center;gap:10px;border:1px solid var(--line-2);background:var(--surface);
+  border-radius:10px;padding:11px 13px;cursor:pointer;font-weight:600;font-family:var(--display)}
+.pickitem[aria-pressed="true"]{border-color:var(--felt);background:var(--felt-soft);color:var(--felt)}
+.pickitem:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brandrow">
+      <span class="brand">poker<span class="dot">·</span>pot</span>
+      <span class="tablename" id="tablename"></span>
+      <span class="sync" id="sync"><i></i><span>connecting</span></span>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="table" aria-selected="true" id="tab-table">Table</button>
+      <button class="tab" role="tab" data-tab="ledger" aria-selected="false" id="tab-ledger">Ledger</button>
+      <button class="tab" role="tab" data-tab="settle" aria-selected="false" id="tab-settle">Settle</button>
+    </nav>
+  </header>
+  <main id="main"></main>
+</div>
+<div id="dock"></div>
+<div id="modalhost"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   Pokerpot — shared chip ledger + live pot for a home game.
+   One db document holds the whole table so every phone agrees.
+   ============================================================ */
+
+const $ = (s, r=document) => r.querySelector(s);
+const DOC_PATH = "table/state";
+const SEAT_COLORS = ["#B03A2E","#1D6A4A","#2E5E8C","#8C6519","#6B3A7A","#0F6E70","#A8553B","#42592B"];
+
+let transport = null;          // server or artifact-db sync, or null (this device only)
+let state = null;              // the whole table
+let tab = "table";
+let writing = false;
+let flash = null;              // transient message under the dock
+let raiseTo = null;            // in-flight raise amount (uncommitted UI state)
+let modal = null;              // {kind, ...}
+
+/* ---------- money ---------- */
+const chips = n => Math.round(n).toLocaleString("en-US");
+const money = n => (n < 0 ? "-$" : "$") + Math.abs(n).toFixed(2);
+const rate = s => (s.config.buyinChips / s.config.buyinCost) || 1; // chips per dollar
+const toCash = (s, c) => c / rate(s);
+
+/* ---------- identity ---------- */
+const uid = () => Math.random().toString(36).slice(2, 9);
+const initials = name => name.trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
+const colorOf = p => SEAT_COLORS[p.seat % SEAT_COLORS.length];
+const byId = (s, id) => s.players.find(p => p.id === id);
+const nameOf = (s, id) => (byId(s, id) || {name:"?"}).name;
+
+/* ============================================================
+   Fresh table
+   ============================================================ */
+function newTable(name, opts = {}) {
+  return {
+    rev: 1,
+    name: name || "Home game",
+    createdAt: new Date().toISOString(),
+    demo: !!opts.demo,
+    config: { sb: 25, bb: 50, ante: 0, buyinChips: 2000, buyinCost: 20, ...(opts.config || {}) },
+    players: opts.players || [],
+    buttonId: opts.buttonId || null,
+    handNo: 0,
+    hand: null,
+    log: [],
+  };
+}
+
+function makePlayer(name, seat) {
+  return { id: uid(), name, seat, status: "in", buyins: 1, stack: 0, cashedOut: null };
+}
+
+/* ============================================================
+   Hand engine
+   ============================================================ */
+
+// Seat order for a hand: everyone live, starting immediately left of the button.
+function rotation(s) {
+  const live = s.players.filter(p => p.status === "in" && p.stack > 0)
+                        .sort((a, b) => a.seat - b.seat);
+  if (live.length < 2) return [];
+  let i = live.findIndex(p => p.id === s.buttonId);
+  if (i < 0) i = live.length - 1;               // button sat out: treat as last
+  return live.slice(i + 1).concat(live.slice(0, i + 1)).map(p => p.id);
+}
+
+function startHand(s) {
+  const seats = rotation(s);
+  if (seats.length < 2) { flash = "Need two players with chips."; return s; }
+  const n = seats.length;
+  const heads = n === 2;
+  // Heads-up: the button posts the small blind, so seats[0] (left of button) is the BB.
+  const sbId = heads ? seats[1] : seats[0];
+  const bbId = heads ? seats[0] : seats[1];
+
+  const hand = {
+    no: s.handNo + 1,
+    street: "preflop",
+    seats,
+    sbId, bbId,
+    committed: {},   // total put in this hand, per player
+    onStreet: {},    // put in on the current street
+    folded: [],
+    allIn: [],
+    acted: [],
+    currentBet: 0,
+    lastRaise: s.config.bb,
+    toAct: null,
+    events: [],
+  };
+
+  for (const id of seats) { hand.committed[id] = 0; hand.onStreet[id] = 0; }
+
+  if (s.config.ante > 0) for (const id of seats) post(s, hand, id, s.config.ante, "ante");
+  hand.onStreet = Object.fromEntries(seats.map(id => [id, 0]));   // antes are dead money
+  hand.currentBet = 0;
+
+  post(s, hand, sbId, s.config.sb, "small blind");
+  post(s, hand, bbId, s.config.bb, "big blind");
+  hand.currentBet = Math.max(...seats.map(id => hand.onStreet[id]));
+  hand.lastRaise = s.config.bb;
+
+  // Preflop, action opens left of the big blind (heads-up: the button/SB).
+  hand.toAct = heads ? seats[1] : seats[2 % n];
+  hand.toAct = nextLive(hand, hand.toAct, true);
+
+  s.hand = hand;
+  s.handNo = hand.no;
+  return s;
+}
+
+// Move chips from a stack into the pot. Caps at the stack (that's an all-in).
+function post(s, hand, id, amount, label) {
+  const p = byId(s, id);
+  const amt = Math.min(amount, p.stack);
+  p.stack -= amt;
+  hand.committed[id] = (hand.committed[id] || 0) + amt;
+  hand.onStreet[id] = (hand.onStreet[id] || 0) + amt;
+  if (p.stack === 0 && !hand.allIn.includes(id)) hand.allIn.push(id);
+  if (label) hand.events.push({ id, label, amt });
+  return amt;
+}
+
+const isLive = (hand, id) => !hand.folded.includes(id) && !hand.allIn.includes(id);
+const inHand = (hand, id) => !hand.folded.includes(id);
+
+// Next player who still has a decision to make, walking the seat order.
+function nextLive(hand, fromId, inclusive = false) {
+  const n = hand.seats.length;
+  let i = hand.seats.indexOf(fromId);
+  if (i < 0) i = 0;
+  for (let k = inclusive ? 0 : 1; k <= n; k++) {
+    const id = hand.seats[(i + k) % n];
+    if (isLive(hand, id)) return id;
+  }
+  return null;
+}
+
+function streetDone(hand) {
+  const live = hand.seats.filter(id => isLive(hand, id));
+  if (live.length === 0) return true;
+  if (live.length === 1 && hand.seats.filter(id => inHand(hand, id)).length === 1) return true;
+  return live.every(id => hand.acted.includes(id) && (hand.onStreet[id] || 0) === hand.currentBet);
+}
+
+const STREETS = ["preflop", "flop", "turn", "river"];
+
+function advance(s) {
+  const hand = s.hand;
+  const alive = hand.seats.filter(id => inHand(hand, id));
+
+  if (alive.length === 1) { s.pending = { kind: "uncontested", winner: alive[0] }; return s; }
+  if (!streetDone(hand)) { hand.toAct = nextLive(hand, hand.toAct); return s; }
+
+  const stillBetting = hand.seats.filter(id => isLive(hand, id));
+  const i = STREETS.indexOf(hand.street);
+
+  // Everyone is all-in (or one lone caller): no more betting, run it out.
+  if (stillBetting.length <= 1 || i === STREETS.length - 1) {
+    hand.street = "showdown";
+    hand.toAct = null;
+    return s;
+  }
+
+  hand.street = STREETS[i + 1];
+  for (const id of hand.seats) hand.onStreet[id] = 0;
+  hand.currentBet = 0;
+  hand.lastRaise = s.config.bb;
+  hand.acted = [];
+  hand.toAct = nextLive(hand, hand.seats[0], true);
+  return s;
+}
+
+/* ---------- actions ---------- */
+function act(s, kind, amount) {
+  const hand = s.hand;
+  if (!hand || !hand.toAct) return s;
+  const id = hand.toAct;
+  const p = byId(s, id);
+  const owed = hand.currentBet - (hand.onStreet[id] || 0);
+
+  if (kind === "fold") {
+    hand.folded.push(id);
+    hand.events.push({ id, label: "folds" });
+  } else if (kind === "check") {
+    if (owed > 0) return s;
+    hand.events.push({ id, label: "checks" });
+  } else if (kind === "call") {
+    const paid = post(s, hand, id, owed, null);
+    hand.events.push({ id, label: paid < owed ? "calls all-in" : "calls", amt: paid });
+  } else if (kind === "raise") {
+    const target = Math.min(amount, (hand.onStreet[id] || 0) + p.stack);
+    const put = target - (hand.onStreet[id] || 0);
+    if (put <= 0) return s;
+    const opening = hand.currentBet === 0;
+    post(s, hand, id, put, null);
+    const newBet = hand.onStreet[id];
+    if (newBet > hand.currentBet) {
+      hand.lastRaise = Math.max(newBet - hand.currentBet, hand.lastRaise);
+      hand.currentBet = newBet;
+      // A raise reopens the action for everyone still live.
+      hand.acted = hand.acted.filter(x => x === id);
+    }
+    hand.events.push({ id, label: opening ? "bets" : "raises to", amt: newBet });
+  }
+
+  if (!hand.acted.includes(id)) hand.acted.push(id);
+  return advance(s);
+}
+
+/* ---------- pots ---------- */
+// Split total contributions into a main pot and any side pots. Chips from
+// folded players stay in the pot but win nothing.
+function pots(s) {
+  const hand = s.hand;
+  if (!hand) return [];
+  const entries = Object.entries(hand.committed).filter(([, v]) => v > 0);
+  if (!entries.length) return [];
+  const levels = [...new Set(entries.map(([, v]) => v))].sort((a, b) => a - b);
+  const out = [];
+  let prev = 0;
+  for (const lvl of levels) {
+    const contributors = entries.filter(([, v]) => v >= lvl).map(([id]) => id);
+    const amount = (lvl - prev) * contributors.length;
+    prev = lvl;
+    if (amount <= 0) continue;
+    const eligible = contributors.filter(id => inHand(hand, id));
+    const last = out[out.length - 1];
+    if (!eligible.length && last) { last.amount += amount; continue; }
+    if (last && last.eligible.join() === eligible.join()) last.amount += amount;
+    else out.push({ amount, eligible });
+  }
+  return out;
+}
+
+const potTotal = s => pots(s).reduce((a, p) => a + p.amount, 0);
+
+// Award a pot. Split pots divide evenly; the odd chip goes to the first
+// winner left of the button, same as a real table.
+function award(s, assignments) {
+  const hand = s.hand;
+  const list = pots(s);
+  const summary = [];
+  list.forEach((pot, i) => {
+    const winners = (assignments[i] || []).filter(id => pot.eligible.includes(id));
+    const take = winners.length ? winners : pot.eligible;
+    const share = Math.floor(pot.amount / take.length);
+    let odd = pot.amount - share * take.length;
+    const ordered = hand.seats.filter(id => take.includes(id));
+    for (const id of ordered) {
+      let got = share;
+      if (odd > 0) { got += 1; odd -= 1; }
+      byId(s, id).stack += got;
+      summary.push({ id, amount: got, pot: i });
+    }
+  });
+
+  const rolled = {};
+  for (const w of summary) rolled[w.id] = (rolled[w.id] || 0) + w.amount;
+  s.log.unshift({
+    no: hand.no,
+    at: new Date().toISOString(),
+    total: list.reduce((a, p) => a + p.amount, 0),
+    winners: Object.entries(rolled).map(([id, amount]) => ({ name: nameOf(s, id), amount })),
+    pots: list.length,
+  });
+  s.log = s.log.slice(0, 40);
+
+  // Button moves one live seat on.
+  const live = s.players.filter(p => p.status === "in").sort((a, b) => a.seat - b.seat);
+  if (live.length) {
+    const i = live.findIndex(p => p.id === s.buttonId);
+    s.buttonId = live[(i + 1) % live.length].id;
+  }
+  s.hand = null;
+  s.pending = null;
+  return s;
+}
+
+/* ============================================================
+   Ledger + settlement
+   ============================================================ */
+function stakes(s) {
+  return s.players.map(p => {
+    const invested = p.buyins * s.config.buyinCost;
+    const chipsHeld = p.cashedOut != null ? p.cashedOut : p.stack;
+    const value = toCash(s, chipsHeld);
+    return { ...p, invested, chipsHeld, value, net: value - invested };
+  });
+}
+
+// Greedy settlement: biggest debtor pays the biggest creditor until flat.
+function settlement(s) {
+  const rows = stakes(s).filter(r => Math.abs(r.net) >= 0.005);
+  const owe = rows.filter(r => r.net < 0).map(r => ({ name: r.name, amt: -r.net }))
+                  .sort((a, b) => b.amt - a.amt);
+  const get = rows.filter(r => r.net > 0).map(r => ({ name: r.name, amt: r.net }))
+                  .sort((a, b) => b.amt - a.amt);
+  const pay = [];
+  let i = 0, j = 0;
+  while (i < owe.length && j < get.length) {
+    const amt = Math.min(owe[i].amt, get[j].amt);
+    if (amt >= 0.005) pay.push({ from: owe[i].name, to: get[j].name, amt });
+    owe[i].amt -= amt; get[j].amt -= amt;
+    if (owe[i].amt < 0.005) i++;
+    if (get[j].amt < 0.005) j++;
+  }
+  return pay;
+}
+
+// Chips that should exist vs. chips we can see. A mismatch means a miscount.
+function chipAudit(s) {
+  const expected = s.players.reduce((a, p) => a + p.buyins * s.config.buyinChips, 0);
+  const onTable = s.players.reduce((a, p) => a + (p.cashedOut != null ? p.cashedOut : p.stack), 0);
+  return { expected, onTable, drift: onTable + potTotal(s) - expected };
+}
+
+/* ============================================================
+   Persistence
+   ============================================================ */
+async function mutate(fn) {
+  if (!state || writing) return;
+  const draft = JSON.parse(JSON.stringify(state));
+  const next = fn(draft) || draft;
+  next.rev = (state.rev || 0) + 1;
+  next.demo = false;                     // any real action retires the demo flag
+  state = next;
+  render();
+  if (!transport) { saveLocal(); return; }
+  writing = true;
+  try {
+    await transport.write(next);
+  } catch (e) {
+    if (e && e.conflict) {
+      // Someone at the table acted first. Their version is the truth.
+      state = e.current;
+      flash = "Someone else acted first — showing the table's version.";
+    } else {
+      flash = (e && e.userMessage) || "Could not save — check your connection.";
+    }
+    render();
+  } finally { writing = false; }
+}
+
+function saveLocal() {
+  try { localStorage.setItem("pokerpot.local", JSON.stringify(state)); } catch (e) {}
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem("pokerpot.local");
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function setSync(mode, label) {
+  const el = $("#sync");
+  el.className = "sync " + mode;
+  el.lastElementChild.textContent = label;
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+function render() {
+  if (!state) return;
+  $("#tablename").textContent = state.name;
+  for (const b of document.querySelectorAll(".tab"))
+    b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+
+  const main = $("#main");
+  main.innerHTML = "";
+  if (tab === "table") main.append(viewTable());
+  if (tab === "ledger") main.append(viewLedger());
+  if (tab === "settle") main.append(viewSettle());
+
+  renderDock();
+  renderModal();
+}
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+function html(tag, cls, markup) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (markup != null) n.innerHTML = markup;
+  return n;
+}
+function button(label, cls, onClick) {
+  const b = el("button", "btn " + (cls || ""), label);
+  b.type = "button";
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+/* ---------- Table ---------- */
+function viewTable() {
+  const frag = document.createDocumentFragment();
+  const s = state, hand = s.hand;
+
+  if (s.demo) {
+    const bn = el("div", "banner");
+    bn.append(el("span", null, "Demo table, so you can see it working. Start a real session to clear it."));
+    bn.append(button("New session", "sm brass", () => { modal = { kind: "newsession" }; render(); }));
+    frag.append(bn);
+  }
+
+  // Pot headline
+  const bar = el("div", "potbar");
+  const left = el("div");
+  left.append(el("div", "eyebrow", hand ? (hand.street === "showdown" ? "Showdown" : hand.street) : "Pot"));
+  const fig = el("div", "potfig");
+  fig.append(el("span", "v", chips(potTotal(s))));
+  fig.append(el("span", "u", "chips · " + money(toCash(s, potTotal(s)))));
+  left.append(fig);
+  const list = pots(s);
+  if (list.length > 1) {
+    const sp = el("div", "sidepots");
+    list.forEach((p, i) => {
+      const t = html("span", "sidepot",
+        (i === 0 ? "Main" : "Side " + i) + " <b>" + chips(p.amount) + "</b> · " +
+        p.eligible.map(id => nameOf(s, id)).join(", "));
+      sp.append(t);
+    });
+    left.append(sp);
+  }
+  bar.append(left);
+
+  const meta = el("div", "handmeta");
+  meta.append(el("div", null, hand ? "Hand #" + hand.no : s.handNo ? "Last hand #" + s.handNo : "No hands yet"));
+  meta.append(html("div", null, "Blinds <span class='num'>" + chips(s.config.sb) + "/" + chips(s.config.bb) + "</span>"));
+  bar.append(meta);
+  frag.append(bar);
+
+  const cols = el("div", "cols two");
+
+  // Seats
+  const panel = el("div", "panel");
+  const head = el("div", "panelhead");
+  head.append(el("h2", null, hand ? "In the hand" : "At the table"));
+  if (hand) head.append(button("Cancel hand", "xs ghost", () => {
+    if (confirm("Cancel this hand and return every chip?")) mutate(s2 => { returnChips(s2); s2.hand = null; s2.pending = null; });
+  }));
+  panel.append(head);
+
+  const seats = el("div", "seats");
+  const order = hand ? hand.seats.map(id => byId(s, id))
+                     : [...s.players].sort((a, b) => a.seat - b.seat);
+  if (!order.length) {
+    seats.append(el("div", "empty", "No players yet. Add them on the Ledger tab."));
+  }
+  for (const p of order) seats.append(seatRow(p));
+  panel.append(seats);
+
+  if (!hand && s.players.filter(p => p.status === "in" && p.stack > 0).length >= 2) {
+    panel.append(button("Deal hand #" + (s.handNo + 1), "primary", () => mutate(startHand)));
+  }
+  cols.append(panel);
+
+  // Recent hands
+  const side = el("div", "panel");
+  side.append(el("h2", null, "Recent hands"));
+  if (!s.log.length) {
+    side.append(el("div", "empty", "Hands you finish show up here."));
+  } else {
+    const lg = el("div", "log");
+    for (const h of s.log.slice(0, 12)) {
+      const who = h.winners.map(w => w.name + " " + chips(w.amount)).join(", ");
+      lg.append(html("div", null,
+        "<b>#" + h.no + "</b> " + who + (h.pots > 1 ? " <span class='eyebrow'>split pots</span>" : "")));
+    }
+    side.append(lg);
+  }
+  const audit = chipAudit(s);
+  if (Math.abs(audit.drift) > 0) {
+    side.append(html("div", "note",
+      "<b>Chip count is off by " + chips(Math.abs(audit.drift)) + ".</b> " +
+      chips(audit.expected) + " bought in, " + chips(audit.onTable + potTotal(s)) + " accounted for. " +
+      "Fix a stack on the Ledger tab."));
+  }
+  cols.append(side);
+  frag.append(cols);
+  return frag;
+}
+
+function seatRow(p) {
+  const s = state, hand = s.hand;
+  const row = el("div", "seat");
+  if (hand) {
+    if (hand.toAct === p.id) row.classList.add("turn");
+    if (hand.folded.includes(p.id)) row.classList.add("folded");
+  }
+  if (p.status !== "in") row.classList.add("away");
+
+  const av = el("div", "avatar", initials(p.name));
+  av.style.background = colorOf(p);
+  row.append(av);
+
+  const who = el("div", "who");
+  who.append(el("div", "nm", p.name));
+  const sub = el("div", "sub");
+  if (s.buttonId === p.id) sub.append(el("span", "tag btn-d", "D"));
+  if (hand && hand.sbId === p.id) sub.append(el("span", "tag blind", "SB"));
+  if (hand && hand.bbId === p.id) sub.append(el("span", "tag blind", "BB"));
+  if (hand && hand.allIn.includes(p.id)) sub.append(el("span", "tag allin", "All in"));
+  if (hand && hand.folded.includes(p.id)) sub.append(el("span", "tag fold", "Folded"));
+  if (p.status === "away") sub.append(el("span", "tag", "Sitting out"));
+  if (p.status === "out") sub.append(el("span", "tag", "Cashed out"));
+  if (!hand && p.status === "in") sub.append(el("span", null, p.buyins + "× buy-in"));
+  who.append(sub);
+  row.append(who);
+
+  const st = el("div", "stack");
+  st.append(el("div", "v", chips(p.cashedOut != null ? p.cashedOut : p.stack)));
+  if (hand && hand.onStreet[p.id] > 0) st.append(el("div", "c", "bet " + chips(hand.onStreet[p.id])));
+  else if (hand && hand.committed[p.id] > 0) st.append(el("div", "c", "in " + chips(hand.committed[p.id])));
+  row.append(st);
+  return row;
+}
+
+function returnChips(s) {
+  if (!s.hand) return;
+  for (const [id, amt] of Object.entries(s.hand.committed)) {
+    const p = byId(s, id);
+    if (p) p.stack += amt;
+  }
+}
+
+/* ---------- action dock ---------- */
+function renderDock() {
+  const host = $("#dock");
+  host.innerHTML = "";
+  const s = state, hand = s.hand;
+  if (tab !== "table" || !hand) { if (flash) host.append(flashBar()); return; }
+
+  const wrapper = el("div", "dock");
+  const inner = el("div", "inner");
+
+  if (s.pending && s.pending.kind === "uncontested") {
+    const winner = s.pending.winner;
+    inner.append(html("div", "onthe", "<span>Everyone folded</span><b>" + nameOf(s, winner) + " takes it</b>"));
+    inner.append(button("Award " + chips(potTotal(s)) + " to " + nameOf(s, winner), "primary",
+      () => mutate(s2 => award(s2, pots(s2).map(() => [winner])))));
+    wrapper.append(inner); host.append(wrapper); return;
+  }
+
+  if (hand.street === "showdown") {
+    inner.append(html("div", "onthe", "<span>Showdown</span><b>" + chips(potTotal(s)) + " to award</b>"));
+    inner.append(button("Pick the winner" + (pots(s).length > 1 ? "s" : ""), "primary",
+      () => { modal = { kind: "award", picks: pots(s).map(() => []) }; render(); }));
+    wrapper.append(inner); host.append(wrapper); return;
+  }
+
+  const id = hand.toAct;
+  if (!id) { host.append(wrapper); return; }
+  const p = byId(s, id);
+  const owed = Math.min(hand.currentBet - (hand.onStreet[id] || 0), p.stack);
+  const maxTo = (hand.onStreet[id] || 0) + p.stack;
+  const minTo = Math.min(maxTo, hand.currentBet > 0 ? hand.currentBet + hand.lastRaise : s.config.bb);
+  if (raiseTo == null || raiseTo < minTo || raiseTo > maxTo) raiseTo = minTo;
+
+  inner.append(html("div", "onthe",
+    "<span>Action on</span><b>" + p.name + "</b><span class='num'>" + chips(p.stack) + " behind</span>"));
+
+  const acts = el("div", "acts");
+  acts.append(button("Fold", "danger", () => { raiseTo = null; mutate(s2 => act(s2, "fold")); }));
+  acts.append(owed > 0
+    ? button("Call " + chips(owed), "", () => { raiseTo = null; mutate(s2 => act(s2, "call")); })
+    : button("Check", "", () => { raiseTo = null; mutate(s2 => act(s2, "check")); }));
+  acts.append(button(hand.currentBet > 0 ? "Raise" : "Bet", "brass", () => {
+    const to = raiseTo;
+    raiseTo = null;
+    mutate(s2 => act(s2, "raise", to));
+  }));
+  inner.append(acts);
+
+  const rr = el("div", "raiserow");
+  rr.append(button("−", "sm", () => { raiseTo = Math.max(minTo, raiseTo - s.config.bb); render(); }));
+  const inp = el("input", "stepper");
+  inp.type = "text";
+  inp.inputMode = "numeric";
+  inp.id = "raise-amount";
+  inp.value = chips(raiseTo);
+  inp.setAttribute("aria-label", "Raise to");
+  inp.addEventListener("change", () => {
+    const v = parseInt(inp.value.replace(/[^0-9]/g, ""), 10);
+    raiseTo = isNaN(v) ? minTo : Math.max(minTo, Math.min(maxTo, v));
+    render();
+  });
+  rr.append(inp);
+  rr.append(button("+", "sm", () => { raiseTo = Math.min(maxTo, raiseTo + s.config.bb); render(); }));
+  inner.append(rr);
+
+  const pot = potTotal(s);
+  const quick = el("div", "quick");
+  const opts = [
+    ["Min", minTo],
+    ["½ pot", hand.currentBet + Math.round((pot + owed) / 2)],
+    ["Pot", hand.currentBet + pot + owed],
+    ["All in", maxTo],
+  ];
+  for (const [label, v] of opts) {
+    const target = Math.max(minTo, Math.min(maxTo, Math.round(v)));
+    const b = button(label, "xs", () => { raiseTo = target; render(); });
+    quick.append(b);
+  }
+  inner.append(quick);
+
+  wrapper.append(inner);
+  host.append(wrapper);
+}
+
+let flashTimer = null;
+function flashBar() {
+  const w = el("div", "dock");
+  const i = el("div", "inner");
+  i.append(el("div", "note", flash));
+  w.append(i);
+  if (!flashTimer) flashTimer = setTimeout(() => { flashTimer = null; flash = null; render(); }, 3400);
+  return w;
+}
+
+/* ---------- Ledger ---------- */
+function viewLedger() {
+  const frag = document.createDocumentFragment();
+  const s = state;
+  const cols = el("div", "cols two");
+
+  const panel = el("div", "panel");
+  const head = el("div", "panelhead");
+  head.append(el("h2", null, "Players"));
+  head.append(button("Add player", "sm", () => { modal = { kind: "addplayer" }; render(); }));
+  panel.append(head);
+
+  const list = el("div", "ledger");
+  const sorted = [...s.players].sort((a, b) => a.seat - b.seat);
+  const byPlayer = Object.fromEntries(stakes(s).map(r => [r.id, r]));
+  if (!sorted.length) list.append(el("div", "empty", "Add everyone who's playing. You can add or drop people any time."));
+
+  for (const p of sorted) {
+    const st = byPlayer[p.id];
+    const row = el("div", "lrow");
+    if (p.status === "out") row.classList.add("out");
+
+    const av = el("div", "avatar", initials(p.name));
+    av.style.background = colorOf(p);
+    row.append(av);
+
+    const who = el("div", "who");
+    who.append(el("div", "nm", p.name));
+    who.append(html("div", "sub",
+      "<span class='num'>" + money(st.invested) + "</span> in · " +
+      "<span class='num'>" + chips(st.chipsHeld) + "</span> chips" +
+      (p.status === "away" ? " · sitting out" : p.status === "out" ? " · cashed out" : "")));
+
+    const ctl = el("div", "lctl");
+    if (p.status !== "out") {
+      const bi = el("div", "buyins");
+      const minus = el("button", null, "−");
+      minus.type = "button";
+      minus.setAttribute("aria-label", "Remove a buy-in for " + p.name);
+      minus.addEventListener("click", () => mutate(s2 => {
+        const q = byId(s2, p.id);
+        if (q.buyins > 0) { q.buyins -= 1; q.stack = Math.max(0, q.stack - s2.config.buyinChips); }
+      }));
+      const n = el("div", "n", "×" + p.buyins);
+      const plus = el("button", null, "+");
+      plus.type = "button";
+      plus.setAttribute("aria-label", "Add a buy-in for " + p.name);
+      plus.addEventListener("click", () => mutate(s2 => {
+        const q = byId(s2, p.id);
+        q.buyins += 1; q.stack += s2.config.buyinChips;
+      }));
+      bi.append(minus, n, plus);
+      ctl.append(bi);
+
+      ctl.append(button(p.status === "away" ? "Sit in" : "Sit out", "xs", () => mutate(s2 => {
+        const q = byId(s2, p.id);
+        q.status = q.status === "away" ? "in" : "away";
+      })));
+      ctl.append(button("Count chips", "xs", () => { modal = { kind: "recount", id: p.id }; render(); }));
+      ctl.append(button("Cash out", "xs", () => { modal = { kind: "cashout", id: p.id }; render(); }));
+    } else {
+      ctl.append(button("Buy back in", "xs", () => mutate(s2 => {
+        const q = byId(s2, p.id);
+        q.status = "in"; q.cashedOut = null; q.buyins += 1; q.stack = s2.config.buyinChips;
+      })));
+    }
+    ctl.append(button("Remove", "xs ghost", () => {
+      if (!confirm("Remove " + p.name + " from the table? Their buy-ins go too.")) return;
+      mutate(s2 => {
+        s2.players = s2.players.filter(x => x.id !== p.id);
+        if (s2.buttonId === p.id) s2.buttonId = s2.players.length ? s2.players[0].id : null;
+      });
+    }));
+    who.append(ctl);
+    row.append(who);
+
+    const val = el("div", "stack");
+    val.append(el("div", "v " + (st.net > 0 ? "net-pos" : st.net < 0 ? "net-neg" : ""),
+      (st.net > 0 ? "+" : "") + money(st.net)));
+    val.append(el("div", "c", "net"));
+    row.append(val);
+    list.append(row);
+  }
+  panel.append(list);
+  cols.append(panel);
+
+  // Stakes
+  const side = el("div", "panel");
+  side.append(el("h2", null, "Stakes"));
+  const card = el("div", "card");
+  const g = el("div", "grid2");
+  g.append(numField("Small blind", s.config.sb, v => mutate(s2 => { s2.config.sb = v; })));
+  g.append(numField("Big blind", s.config.bb, v => mutate(s2 => { s2.config.bb = v; })));
+  g.append(numField("Ante", s.config.ante, v => mutate(s2 => { s2.config.ante = v; })));
+  g.append(numField("Buy-in ($)", s.config.buyinCost, v => mutate(s2 => { s2.config.buyinCost = v; })));
+  card.append(g);
+  card.append(numField("Chips per buy-in", s.config.buyinChips, v => mutate(s2 => { s2.config.buyinChips = v; })));
+  card.append(html("div", "note",
+    "<span class='num'>" + chips(rate(s)) + "</span> chips = $1. Changing this reprices everyone's stack at settle-up, " +
+    "so set it before the first hand."));
+  side.append(card);
+
+  const audit = chipAudit(s);
+  const auditCard = el("div", "card");
+  auditCard.append(el("div", "eyebrow", "Chip audit"));
+  auditCard.append(html("div", "note",
+    "Bought in: <span class='num'>" + chips(audit.expected) + "</span><br>" +
+    "On the table: <span class='num'>" + chips(audit.onTable + potTotal(s)) + "</span><br>" +
+    (audit.drift === 0
+      ? "<b style='color:var(--felt)'>Balanced.</b>"
+      : "<b style='color:var(--clay)'>Off by " + chips(Math.abs(audit.drift)) + ".</b> Recount a stack to fix it.")));
+  side.append(auditCard);
+
+  side.append(button("New session", "sm", () => { modal = { kind: "newsession" }; render(); }));
+  cols.append(side);
+  frag.append(cols);
+  return frag;
+}
+
+function numField(label, value, onChange) {
+  const f = el("div", "field");
+  const id = "f-" + label.toLowerCase().replace(/[^a-z]+/g, "-");
+  const l = el("label", null, label);
+  l.htmlFor = id;
+  const i = el("input", "input num");
+  i.id = id; i.type = "text"; i.inputMode = "decimal"; i.value = value;
+  i.addEventListener("change", () => {
+    const v = parseFloat(i.value.replace(/[^0-9.]/g, ""));
+    if (!isNaN(v) && v >= 0) onChange(v); else render();
+  });
+  f.append(l, i);
+  return f;
+}
+
+/* ---------- Settle ---------- */
+function viewSettle() {
+  const frag = document.createDocumentFragment();
+  const s = state;
+  const rows = stakes(s).sort((a, b) => b.net - a.net);
+  const pay = settlement(s);
+
+  const bar = el("div", "potbar");
+  const left = el("div");
+  left.append(el("div", "eyebrow", "Money on the table"));
+  const fig = el("div", "potfig");
+  fig.append(el("span", "v", money(s.players.reduce((a, p) => a + p.buyins * s.config.buyinCost, 0))));
+  fig.append(el("span", "u", s.players.length + " players"));
+  left.append(fig);
+  bar.append(left);
+  frag.append(bar);
+
+  const cols = el("div", "cols two");
+
+  const panel = el("div", "panel");
+  panel.append(el("h2", null, "Who pays whom"));
+  if (s.hand) {
+    panel.append(html("div", "banner", "<span>A hand is still live — those chips aren't settled yet.</span>"));
+  }
+  const settle = el("div", "settle");
+  if (!pay.length) {
+    settle.append(el("div", "empty", "Everyone's even. Nothing to pay."));
+  } else {
+    for (const t of pay) {
+      const r = el("div", "pay");
+      r.append(el("div", "p", t.from));
+      r.append(el("div", "arrow", "→"));
+      r.append(el("div", "p", t.to));
+      r.append(el("div", "amt", money(t.amt)));
+      settle.append(r);
+    }
+  }
+  panel.append(settle);
+  panel.append(html("div", "note",
+    "Fewest transfers that clear every balance. Count each player's chips on the Ledger tab first — " +
+    "settlement is only as good as the counts."));
+  cols.append(panel);
+
+  const side = el("div", "panel");
+  side.append(el("h2", null, "Net by player"));
+  const card = el("div", "card");
+  for (const r of rows) {
+    const n = el("div", "netrow");
+    n.append(el("div", "p", r.name));
+    n.append(html("div", "num", "<span style='color:var(--ink-3)'>" + money(r.invested) + " in</span>"));
+    n.append(el("div", "num " + (r.net > 0 ? "net-pos" : r.net < 0 ? "net-neg" : ""),
+      (r.net > 0 ? "+" : "") + money(r.net)));
+    card.append(n);
+  }
+  if (!rows.length) card.append(el("div", "empty", "No players yet."));
+  side.append(card);
+  cols.append(side);
+
+  frag.append(cols);
+  return frag;
+}
+
+/* ---------- Modals ---------- */
+function renderModal() {
+  const host = $("#modalhost");
+  host.innerHTML = "";
+  if (!modal) return;
+  const scrim = el("div", "scrim");
+  scrim.addEventListener("click", e => { if (e.target === scrim) { modal = null; render(); } });
+  const box = el("div", "modal");
+
+  if (modal.kind === "addplayer") {
+    box.append(el("h2", null, "Add player"));
+    const f = el("div", "field");
+    const l = el("label", null, "Name"); l.htmlFor = "newname";
+    const i = el("input", "input"); i.id = "newname"; i.placeholder = "e.g. Dana";
+    f.append(l, i);
+    box.append(f);
+    const bi = numFieldLocal("Buy-ins", 1);
+    box.append(bi.node);
+    box.append(html("div", "note", "They start with " + chips(state.config.buyinChips) +
+      " chips per buy-in and can join the next hand."));
+    const row = el("div", "btnrow");
+    row.append(button("Add to table", "primary", () => {
+      const name = i.value.trim();
+      if (!name) { i.focus(); return; }
+      const n = Math.max(1, parseInt(bi.get(), 10) || 1);
+      modal = null;
+      mutate(s2 => {
+        const seat = s2.players.length ? Math.max(...s2.players.map(p => p.seat)) + 1 : 0;
+        const p = makePlayer(name, seat);
+        p.buyins = n;
+        p.stack = n * s2.config.buyinChips;
+        s2.players.push(p);
+        if (!s2.buttonId) s2.buttonId = p.id;
+      });
+    }));
+    row.append(button("Cancel", "ghost", () => { modal = null; render(); }));
+    box.append(row);
+    setTimeout(() => i.focus(), 30);
+  }
+
+  if (modal.kind === "recount") {
+    const p = byId(state, modal.id);
+    box.append(el("h2", null, "Count " + p.name + "'s chips"));
+    box.append(html("div", "note", "Set the stack to what's actually in front of them. " +
+      "Use this when the count drifts — it doesn't change what they paid in."));
+    const f = numFieldLocal("Chips", p.stack);
+    box.append(f.node);
+    const row = el("div", "btnrow");
+    row.append(button("Set stack", "primary", () => {
+      const v = Math.max(0, parseInt(f.get(), 10) || 0);
+      modal = null;
+      mutate(s2 => { byId(s2, p.id).stack = v; });
+    }));
+    row.append(button("Cancel", "ghost", () => { modal = null; render(); }));
+    box.append(row);
+  }
+
+  if (modal.kind === "cashout") {
+    const p = byId(state, modal.id);
+    box.append(el("h2", null, "Cash out " + p.name));
+    box.append(html("div", "note", "Count their chips, then they're out of the rotation. " +
+      "They'll still appear in Settle."));
+    const f = numFieldLocal("Final chip count", p.stack);
+    box.append(f.node);
+    const row = el("div", "btnrow");
+    row.append(button("Cash out", "primary", () => {
+      const v = Math.max(0, parseInt(f.get(), 10) || 0);
+      modal = null;
+      mutate(s2 => {
+        const q = byId(s2, p.id);
+        q.cashedOut = v; q.stack = 0; q.status = "out";
+        if (s2.buttonId === q.id) {
+          const rest = s2.players.filter(x => x.status === "in");
+          s2.buttonId = rest.length ? rest[0].id : null;
+        }
+      });
+    }));
+    row.append(button("Cancel", "ghost", () => { modal = null; render(); }));
+    box.append(row);
+  }
+
+  if (modal.kind === "award") {
+    const list = pots(state);
+    box.append(el("h2", null, list.length > 1 ? "Who won each pot?" : "Who won?"));
+    list.forEach((pot, i) => {
+      box.append(el("div", "eyebrow",
+        (list.length > 1 ? (i === 0 ? "Main pot · " : "Side pot " + i + " · ") : "Pot · ") + chips(pot.amount)));
+      const pick = el("div", "pick");
+      for (const id of pot.eligible) {
+        const on = modal.picks[i].includes(id);
+        const b = el("button", "pickitem", nameOf(state, id));
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(on));
+        b.addEventListener("click", () => {
+          const set = new Set(modal.picks[i]);
+          set.has(id) ? set.delete(id) : set.add(id);
+          modal.picks[i] = [...set];
+          render();
+        });
+        pick.append(b);
+      }
+      box.append(pick);
+    });
+    box.append(html("div", "note", "Tap more than one name to chop a pot. Odd chips go to the first winner left of the button."));
+    const row = el("div", "btnrow");
+    const ready = modal.picks.every(p => p.length > 0);
+    const go = button("Award pot" + (list.length > 1 ? "s" : ""), "primary", () => {
+      const picks = modal.picks;
+      modal = null;
+      mutate(s2 => award(s2, picks));
+    });
+    go.disabled = !ready;
+    row.append(go);
+    row.append(button("Cancel", "ghost", () => { modal = null; render(); }));
+    box.append(row);
+  }
+
+  if (modal.kind === "newsession") {
+    box.append(el("h2", null, "New session"));
+    box.append(html("div", "note", "Clears every player, buy-in and hand for everyone at this table. " +
+      "Stakes carry over — change them on the Ledger tab."));
+    const f = el("div", "field");
+    const l = el("label", null, "Table name"); l.htmlFor = "sessname";
+    const i = el("input", "input"); i.id = "sessname"; i.value = "Friday night";
+    f.append(l, i);
+    box.append(f);
+    const row = el("div", "btnrow");
+    row.append(button("Start fresh", "danger", () => {
+      const name = i.value.trim() || "Home game";
+      modal = null;
+      mutate(s2 => newTable(name, { config: s2.config }));
+      tab = "ledger";
+    }));
+    row.append(button("Cancel", "ghost", () => { modal = null; render(); }));
+    box.append(row);
+  }
+
+  scrim.append(box);
+  host.append(scrim);
+}
+
+function numFieldLocal(label, value) {
+  const f = el("div", "field");
+  const id = "loc-" + label.toLowerCase().replace(/[^a-z]+/g, "-");
+  const l = el("label", null, label); l.htmlFor = id;
+  const i = el("input", "input num");
+  i.id = id; i.type = "text"; i.inputMode = "numeric"; i.value = value;
+  f.append(l, i);
+  return { node: f, get: () => i.value.replace(/[^0-9.]/g, "") };
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab");
+  if (!b) return;
+  tab = b.dataset.tab;
+  render();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && modal) { modal = null; render(); }
+});
+
+// Render immediately from local state so the page is never a blank shell,
+// then upgrade to whichever shared transport this deployment has.
+state = loadLocal() || demoTable();
+render();
+setSync("local", "this device only");
+
+connect();
+
+async function connect() {
+  const server = await serverTransport();
+  if (server) { transport = server; return; }
+  const cap = await capabilityTransport();
+  if (cap) { transport = cap; return; }
+  setSync("local", "this device only");
+}
+
+/* ---------- transport A: self-hosted server (VPS) ---------- */
+// The server injects its mount point, so the app works at the domain root or
+// under a subpath like /poker. Unset (the artifact) leaves URLs relative.
+const API = (window.__POKERPOT_BASE__ || "./") + "api/";
+
+async function serverTransport() {
+  let head;
+  try {
+    head = await fetch(API + "state", { headers: authHeaders(), cache: "no-store" });
+  } catch (e) { return null; }                    // no server here — probably the artifact
+  if (head.status === 401) { askPin(); return null; }
+  if (!head.ok) return null;
+
+  state = await head.json();
+  render();
+  setSync("live", "live");
+  stream();
+
+  return {
+    async write(next) {
+      const res = await fetch(API + "state", {
+        method: "POST",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      if (res.status === 409) {
+        const current = await res.json();
+        throw { conflict: true, current };
+      }
+      if (res.status === 401) { askPin(); throw { userMessage: "Wrong table PIN." }; }
+      if (!res.ok) throw { userMessage: "Server rejected that — reload the page." };
+    },
+  };
+}
+
+// Server pushes every change over SSE; reconnect on drop.
+function stream() {
+  const url = API + "stream" + (tablePin() ? "?pin=" + encodeURIComponent(tablePin()) : "");
+  const es = new EventSource(url);
+  es.onmessage = ev => {
+    if (writing) return;                          // our own optimistic view wins until the write lands
+    try {
+      const next = JSON.parse(ev.data);
+      if (next.rev >= (state.rev || 0)) { state = next; render(); }
+    } catch (e) {}
+  };
+  es.onopen = () => setSync("live", "live");
+  es.onerror = () => {
+    setSync("", "reconnecting");
+    es.close();
+    setTimeout(stream, 2000);
+  };
+}
+
+function tablePin() {
+  try { return localStorage.getItem("pokerpot.pin") || ""; } catch (e) { return ""; }
+}
+function authHeaders() {
+  const pin = tablePin();
+  return pin ? { "x-pokerpot-pin": pin } : {};
+}
+function askPin() {
+  const pin = prompt("Table PIN");
+  if (pin == null) { setSync("local", "locked"); return; }
+  try { localStorage.setItem("pokerpot.pin", pin.trim()); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- transport B: artifact db (claude.ai hosting) ---------- */
+async function capabilityTransport() {
+  if (!(window.claude && window.claude.use)) return null;
+  let ns = null;
+  try { ns = await window.claude.use("db"); } catch (e) { return null; }
+  if (!ns) return null;
+  setSync("live", "live");
+  ns.doc(DOC_PATH).onSnapshot(
+    snap => {
+      if (!snap.exists) { ns.doc(DOC_PATH).set(demoTable()).catch(() => {}); return; }
+      if (writing && snap.metadata.hasPendingWrites) return;
+      state = snap.data();
+      render();
+    },
+    err => {
+      transport = null;
+      setSync("local", err.code === "revoked" ? "disconnected" : "this device only");
+    }
+  );
+  return {
+    async write(next) {
+      try { await ns.doc(DOC_PATH).set(next); }
+      catch (e) {
+        throw { userMessage: e && e.code === "invalid_argument"
+          ? "You have view-only access to this table." : null };
+      }
+    },
+  };
+}
+
+/* A table mid-session, so the first look shows the thing working. */
+function demoTable() {
+  const names = ["Ada", "Bryn", "Cal", "Dev", "Esme", "Finn", "Gus", "Hana"];
+  const t = newTable("Friday night", { demo: true });
+  t.players = names.map((n, i) => {
+    const p = makePlayer(n, i);
+    p.stack = t.config.buyinChips;
+    return p;
+  });
+  t.players[2].buyins = 2; t.players[2].stack = 3150;
+  t.players[0].stack = 2725;
+  t.players[5].stack = 1180;
+  t.players[6].status = "away";
+  t.buttonId = t.players[0].id;
+  return t;
+}
+
+})();
+</script>
