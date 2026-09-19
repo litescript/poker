@@ -229,6 +229,11 @@ button{font:inherit;color:inherit}
 
 const $ = (s, r=document) => r.querySelector(s);
 const DOC_PATH = "table/state";
+// The server injects its mount point, so the app works at the domain root or
+// under a subpath like /poker. Unset (the artifact) leaves URLs relative.
+// Must be initialised before connect() runs — a const in the temporal dead
+// zone here reads as "no server" and silently drops the page to local-only.
+const API = (window.__POKERPOT_BASE__ || "./") + "api/";
 const SEAT_COLORS = ["#B03A2E","#1D6A4A","#2E5E8C","#8C6519","#6B3A7A","#0F6E70","#A8553B","#42592B"];
 
 let transport = null;          // server or artifact-db sync, or null (this device only)
@@ -1225,15 +1230,16 @@ async function connect() {
 }
 
 /* ---------- transport A: self-hosted server (VPS) ---------- */
-// The server injects its mount point, so the app works at the domain root or
-// under a subpath like /poker. Unset (the artifact) leaves URLs relative.
-const API = (window.__POKERPOT_BASE__ || "./") + "api/";
-
 async function serverTransport() {
   let head;
   try {
     head = await fetch(API + "state", { cache: "no-store" });
-  } catch (e) { return null; }                    // no server here — probably the artifact
+  } catch (e) {
+    // A network failure here is expected (the artifact has no /api). Anything
+    // else is a bug in this file, and silence would hide it.
+    if (!(e instanceof TypeError)) console.error("[pokerpot] sync failed:", e);
+    return null;
+  }
   if (!head.ok) return null;
 
   state = await head.json();

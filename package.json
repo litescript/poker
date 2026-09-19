@@ -4,9 +4,11 @@
   "private": true,
   "description": "Shared chip ledger and live pot tracker for a home poker game",
   "type": "module",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test/engine.test.mjs"
+    "test": "node test/engine.test.mjs && node test/boot.test.mjs"
   }
 }

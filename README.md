@@ -109,6 +109,7 @@ index.html         the whole app — engine, UI and sync, one file
 server.mjs         sync server: static page, SSE push, JSON persistence
 Caddyfile          reverse proxy config
 test/engine.test.mjs   known-answer checks for the betting engine
+test/boot.test.mjs     asserts the client actually connects to the server
 ```
 
 `index.html` picks its sync transport at boot: the server's `/api` if it's
@@ -118,13 +119,18 @@ localStorage. So the same file runs self-hosted or as an artifact.
 ## Tests
 
 ```sh
-node test/engine.test.mjs
+npm test
 ```
 
-Covers blind posting (including heads-up, where the button posts the small
+`test/engine.test.mjs` covers blind posting (including heads-up, where the button posts the small
 blind), action order, street advance, min-raise and re-opened action, side pots
 from uneven all-ins, dead money from folded players, odd-chip rounding on split
 pots, and settlement balancing to zero.
+
+`test/boot.test.mjs` stubs a browser and asserts the page actually reaches its
+API and opens the event stream. Every failure path in the transport picker
+returns null and falls back to local-only, so a real bug there looks identical
+to "there's no server here" — this pins down the difference.
 
 ## Known limits
 
