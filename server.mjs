@@ -6,7 +6,7 @@
  * the table. No dependencies: Node's own http module, SSE for the push side,
  * and a JSON file on disk so a restart doesn't lose the night.
  *
- *   PORT=8080 POKERPOT_PIN=4242 node server.mjs
+ *   PORT=8080 node server.mjs
  */
 
 import { createServer } from "node:http";
@@ -18,7 +18,6 @@ import { fileURLToPath } from "node:url";
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || "0.0.0.0";
-const PIN = (process.env.POKERPOT_PIN || "").trim();
 const STATE_FILE = process.env.POKERPOT_STATE || join(ROOT, "data", "table.json");
 // Where the app is mounted, e.g. "/poker" for litescript.net/poker. Normalised
 // to a leading and trailing slash: "/" when it sits at the domain root.
@@ -77,13 +76,6 @@ function broadcast() {
 }
 
 /* ------------------------------------------------------------- requests */
-
-function authorized(req, url) {
-  if (!PIN) return true;
-  const given = req.headers["x-pokerpot-pin"] || url.searchParams.get("pin") || "";
-  // Length-independent compare is overkill for a table PIN, but it's free.
-  return given.length === PIN.length && given === PIN;
-}
 
 function send(res, code, body, type = "application/json") {
   res.writeHead(code, {
@@ -146,12 +138,10 @@ const server = createServer(async (req, res) => {
   }
 
   if (path === "/api/state" && req.method === "GET") {
-    if (!authorized(req, url)) return send(res, 401, '{"error":"pin"}');
     return send(res, 200, JSON.stringify(table));
   }
 
   if (path === "/api/state" && req.method === "POST") {
-    if (!authorized(req, url)) return send(res, 401, '{"error":"pin"}');
     let next;
     try {
       next = JSON.parse(await readBody(req));
@@ -172,7 +162,6 @@ const server = createServer(async (req, res) => {
   }
 
   if (path === "/api/stream" && req.method === "GET") {
-    if (!authorized(req, url)) return send(res, 401, '{"error":"pin"}');
     res.writeHead(200, {
       "content-type": "text/event-stream",
       "cache-control": "no-cache, no-transform",
@@ -204,7 +193,6 @@ await loadTable();
 server.listen(PORT, HOST, () => {
   console.log(`[pokerpot] http://${HOST}:${PORT}${BASE === "/" ? "" : BASE}`);
   if (BASE !== "/") console.log(`[pokerpot] mounted at ${BASE}`);
-  console.log(PIN ? "[pokerpot] table PIN required" : "[pokerpot] no PIN set — anyone with the URL can act");
 });
 
 for (const sig of ["SIGINT", "SIGTERM"]) {

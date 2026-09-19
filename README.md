@@ -13,16 +13,15 @@ everyone's phone, all looking at the same table.
 ## Run it
 
 ```sh
-PORT=8082 POKERPOT_PIN=4242 node server.mjs
+PORT=8082 node server.mjs
 ```
 
-No dependencies. Everyone on the wifi opens the URL and types the PIN once.
+No dependencies. Everyone opens the URL and they're at the same table.
 
 | Variable | Default | |
 |---|---|---|
 | `PORT` | `8080` | |
 | `HOST` | `0.0.0.0` | set `127.0.0.1` when behind a reverse proxy |
-| `POKERPOT_PIN` | *(unset)* | when unset, anyone with the URL can act |
 | `POKERPOT_BASE` | `/` | mount point, e.g. `/poker` for `litescript.net/poker` |
 | `POKERPOT_STATE` | `./data/table.json` | where the table is saved |
 
@@ -58,7 +57,7 @@ that block needs `script-src 'self' 'unsafe-inline'`, plus
 and run the app with a matching `POKERPOT_BASE`:
 
 ```sh
-PORT=8082 HOST=127.0.0.1 POKERPOT_BASE=/poker POKERPOT_PIN=4242 node server.mjs
+PORT=8082 HOST=127.0.0.1 POKERPOT_BASE=/poker node server.mjs
 ```
 
 `handle_path` strips the prefix before proxying. `POKERPOT_BASE` is what the
@@ -94,8 +93,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now pokerpot
 ```
 
 The unit runs as root out of `/srv/poker` and sets no `User=`, since root is
-the default. Change `POKERPOT_PIN`, or drop the line to skip the prompt.
-
+the default. 
 Use `cp -f` — without it, an existing unit is left in place and systemd keeps
 running the old one. A unit that fails with `217/USER` is naming a user that
 doesn't exist on the box; check the file in `/etc/systemd/system/`, not the one
@@ -133,5 +131,4 @@ pots, and settlement balancing to zero.
 - Writes are last-write-wins guarded by a revision number: if two people act at
   the same instant, one gets "someone else acted first" and re-renders. Fine for
   a real table where one person acts at a time.
-- The PIN is a speed bump, not authentication. Don't put real money in it.
-- `/api/health` answers without the PIN (rev number and viewer count only).
+- No auth of any kind: anyone with the URL can act. It's a home game.

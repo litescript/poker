@@ -1232,9 +1232,8 @@ const API = (window.__POKERPOT_BASE__ || "./") + "api/";
 async function serverTransport() {
   let head;
   try {
-    head = await fetch(API + "state", { headers: authHeaders(), cache: "no-store" });
+    head = await fetch(API + "state", { cache: "no-store" });
   } catch (e) { return null; }                    // no server here — probably the artifact
-  if (head.status === 401) { askPin(); return null; }
   if (!head.ok) return null;
 
   state = await head.json();
@@ -1246,14 +1245,13 @@ async function serverTransport() {
     async write(next) {
       const res = await fetch(API + "state", {
         method: "POST",
-        headers: { ...authHeaders(), "content-type": "application/json" },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify(next),
       });
       if (res.status === 409) {
         const current = await res.json();
         throw { conflict: true, current };
       }
-      if (res.status === 401) { askPin(); throw { userMessage: "Wrong table PIN." }; }
       if (!res.ok) throw { userMessage: "Server rejected that — reload the page." };
     },
   };
@@ -1261,7 +1259,7 @@ async function serverTransport() {
 
 // Server pushes every change over SSE; reconnect on drop.
 function stream() {
-  const url = API + "stream" + (tablePin() ? "?pin=" + encodeURIComponent(tablePin()) : "");
+  const url = API + "stream";
   const es = new EventSource(url);
   es.onmessage = ev => {
     if (writing) return;                          // our own optimistic view wins until the write lands
@@ -1276,20 +1274,6 @@ function stream() {
     es.close();
     setTimeout(stream, 2000);
   };
-}
-
-function tablePin() {
-  try { return localStorage.getItem("pokerpot.pin") || ""; } catch (e) { return ""; }
-}
-function authHeaders() {
-  const pin = tablePin();
-  return pin ? { "x-pokerpot-pin": pin } : {};
-}
-function askPin() {
-  const pin = prompt("Table PIN");
-  if (pin == null) { setSync("local", "locked"); return; }
-  try { localStorage.setItem("pokerpot.pin", pin.trim()); } catch (e) {}
-  location.reload();
 }
 
 /* ---------- transport B: artifact db (claude.ai hosting) ---------- */
